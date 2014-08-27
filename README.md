@@ -13,3 +13,4 @@
         ]
     }
 
+ssh private key needs to be stored in files/id_rsa_<$title>
