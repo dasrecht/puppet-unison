@@ -1,0 +1,15 @@
+#############################################################
+# THIS FILE IS MANAGED BY PUPPET, CHANGES WILL BE SQUASHED! #
+#############################################################
+
+root = <%= @root1 %>
+root = <%= @root2 %>
+
+servercmd = /usr/bin/unison
+logfile = <%= @home_dir %>/.unison/unison.log
+sshargs = -i <%= @home_dir %>/.unison/id_rsa_<%= title %> <% if sshargs %><%= @sshargs %><% end %>
+<% if @ignore -%>
+<% @ignore.each do |v| -%>
+ignore = <%= v %>
+<% end -%>
+<% end -%>
