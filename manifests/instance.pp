@@ -17,33 +17,37 @@ define unison::instance (
     $cron_monthday  = undef,
     $cron_weekday   = undef,
 ) {
+    # Include parent class to inherit packages
     include unison
 
-    file { "unison_${title}_dir":
-        ensure => directory,
-        path   => "${home_dir}/.unison",
-        mode   => '0700',
-        owner  => $user,
+    # Make sure we only define the directory once
+    unless defined( Unison::Directory["${home_dir}/.unison"]  ) {
+        unison::directory { "${home_dir}/.unison":
+            user    => $user
+        }
     }
 
+    # Private ssh key (stored in files/)
     file { "unison_${title}_sshpriv":
         ensure   => file,
         path     => "${home_dir}/.unison/id_rsa_${title}",
         mode     => '0600',
         owner    => $user,
-        require  => File["unison_${title}_dir"],
+        require => File["unison_${home_dir}/.unison"],
         source   => "puppet:///modules/unison/id_rsa_${title}",
     }
 
+    # Actual unison profile
     file { "${home_dir}/.unison/${title}.prf":
         ensure  => file,
         path    => "${home_dir}/.unison/${title}.prf",
         mode    => '0644',
         owner   => $user,
-        require => File["unison_${title}_dir"],
+        require => File["unison_${home_dir}/.unison"],
         content => template('unison/profile.erb'),
     }
 
+    # public key for Unison instance
     ssh_authorized_key { "unison_ssh_pub_${title}":
         ensure => present,
         user   => $user,
@@ -52,6 +56,7 @@ define unison::instance (
         type   => $pub_type,
     }
 
+    # Cron job if necessary
     if $cron == true {
         cron { "unison_${title}":
             ensure      => present,
